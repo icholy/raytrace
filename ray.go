@@ -174,3 +174,41 @@ func RandomInUnitSphere() Vec3 {
 		}
 	}
 }
+
+// Material scatters rays
+type Material interface {
+	Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool)
+}
+
+// Lambertian is a material which diffuses light
+type Lambertian struct {
+	Albedo Vec3
+}
+
+// Scatter implements Material
+func (l Lambertian) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool) {
+	scattered = Ray{
+		Origin: h.Pos,
+		Dir:    h.Norm.Add(RandomInUnitSphere()),
+	}
+	return scattered, l.Albedo, true
+}
+
+// Metal is a material which reflects light
+type Metal struct {
+	Albedo Vec3
+}
+
+// reflect the ray
+func (Metal) reflect(v, n Vec3) Vec3 {
+	return v.Sub(n.ScalarMul(2 * v.Dot(n)))
+}
+
+// Scatter implements Material
+func (m Metal) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool) {
+	scattered = Ray{
+		Origin: h.Pos,
+		Dir:    m.reflect(r.Dir.Unit(), h.Norm),
+	}
+	return scattered, m.Albedo, scattered.Dir.Dot(h.Norm) > 0
+}
