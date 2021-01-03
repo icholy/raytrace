@@ -18,15 +18,15 @@ func (r Ray) Pos(t float64) Vec3 {
 }
 
 // BasicColor is the color function described on page 10
-func BasicColor(r Ray) Vec3 {
-	s := Sphere{
-		Center: Vec3{0, 0, -1},
-		Radius: 0.5,
+func BasicColor(r Ray, world []Hitter) Vec3 {
+	// find any hits
+	for _, h := range world {
+		if hit := h.Hit(r, 0, 10); hit.Valid {
+			n := hit.Pos.Sub(Vec3{0, 0, -1}).Unit()
+			return n.ScalarAdd(1).ScalarMul(0.5)
+		}
 	}
-	if t, ok := s.Hit(r); ok {
-		n := r.Pos(t).Sub(Vec3{0, 0, -1}).Unit()
-		return n.ScalarAdd(1).ScalarMul(0.5)
-	}
+	// show background
 	unitdir := r.Dir.Unit()
 	t := 0.5 * (unitdir.Y() + 1)
 	return Vec3{1, 1, 1}.ScalarMul(1 - t).Add(Vec3{0.5, 0.7, 1}.ScalarMul(t))
@@ -36,6 +36,13 @@ func BasicColor(r Ray) Vec3 {
 func BasicRay() image.Image {
 	nx := 200
 	ny := 100
+
+	world := []Hitter{
+		Sphere{
+			Center: Vec3{0, 0, -1},
+			Radius: 0.5,
+		},
+	}
 
 	bottomleft := Vec3{-2, -1, -1}
 	horizontal := Vec3{4, 0, 0}
@@ -51,7 +58,7 @@ func BasicRay() image.Image {
 				Origin: origin,
 				Dir:    bottomleft.Add(horizontal.ScalarMul(u)).Add(vertical.ScalarMul(v)),
 			}
-			c := BasicColor(r)
+			c := BasicColor(r, world)
 			m.Set(x, y, color.RGBA{
 				R: uint8(c.R() * 255),
 				G: uint8(c.G() * 255),
@@ -68,14 +75,47 @@ type Sphere struct {
 	Radius float64
 }
 
-func (s Sphere) Hit(r Ray) (float64, bool) {
+func (s Sphere) Hit(r Ray, tmin, tmax float64) Hit {
 	oc := r.Origin.Sub(s.Center)
 	a := r.Dir.Dot(r.Dir)
 	b := 2 * oc.Dot(r.Dir)
 	c := oc.Dot(oc) - s.Radius*s.Radius
 	discriminant := b*b - 4*a*c
-	if discriminant < 0 {
-		return 0, false
+	if discriminant <= 0 {
+		return Hit{}
 	}
-	return (-b - math.Sqrt(discriminant)) / (2 * a), true
+	if t := (-b - math.Sqrt(b*b-a*c)) / a; tmin <= t && t <= tmax {
+		pos := r.Pos(t)
+		return Hit{
+			Valid: true,
+			T:     t,
+			Pos:   pos,
+			Norm:  pos.Sub(s.Center).ScalarDiv(s.Radius),
+		}
+	}
+	if t := (-b + math.Sqrt(b*b-a*c)) / a; tmin <= t && t <= tmax {
+		pos := r.Pos(t)
+		return Hit{
+			Valid: true,
+			T:     t,
+			Pos:   pos,
+			Norm:  pos.Sub(s.Center).ScalarDiv(s.Radius),
+		}
+	}
+	return Hit{}
+}
+
+// Hit is the result of a hit
+type Hit struct {
+	Valid bool
+	T     float64
+	Pos   Vec3
+	Norm  Vec3
+}
+
+// Hitter is an object in the scene which can be hit
+type Hitter interface {
+
+	// Hit checks and reports whether r hit ths object
+	Hit(r Ray, tmin, tmax float64) Hit
 }
