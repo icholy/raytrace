@@ -58,6 +58,7 @@ func BasicRay() image.Image {
 			Center: Vec3{1, 0, -1},
 			Radius: 0.5,
 			Material: Metal{
+				Fuzz:   0.3,
 				Albedo: Vec3{0.8, 0.6, 0.2},
 			},
 		},
@@ -65,6 +66,7 @@ func BasicRay() image.Image {
 			Center: Vec3{-1, 0, -1},
 			Radius: 0.5,
 			Material: Metal{
+				Fuzz:   1,
 				Albedo: Vec3{0.8, 0.8, 0.8},
 			},
 		},
@@ -221,6 +223,7 @@ func (l Lambertian) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok b
 // Metal is a material which reflects light
 type Metal struct {
 	Albedo Vec3
+	Fuzz   float64
 }
 
 // reflect the ray
@@ -232,7 +235,7 @@ func (Metal) reflect(v, n Vec3) Vec3 {
 func (m Metal) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool) {
 	scattered = Ray{
 		Origin: h.Pos,
-		Dir:    m.reflect(r.Dir.Unit(), h.Norm),
+		Dir:    m.reflect(r.Dir.Unit(), h.Norm).Add(RandomInUnitSphere().ScalarMul(m.Fuzz)),
 	}
 	return scattered, m.Albedo, scattered.Dir.Dot(h.Norm) > 0
 }
