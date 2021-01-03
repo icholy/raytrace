@@ -264,7 +264,6 @@ func (Dielectric) refract(v, n Vec3, niOverNt float64) (Vec3, bool) {
 func (d Dielectric) Scatter(in Ray, h Hit) (out Ray, attenuation Vec3, ok bool) {
 	var outwardNorm Vec3
 	var niOverNt float64
-	attenuation = Vec3{1, 1, 0}
 	if in.Dir.Dot(h.Norm) > 0 {
 		outwardNorm = h.Norm.Neg()
 		niOverNt = d.RefIndex
@@ -283,5 +282,5 @@ func (d Dielectric) Scatter(in Ray, h Hit) (out Ray, attenuation Vec3, ok bool) 
 			Dir:    d.reflect(in.Dir, h.Norm),
 		}
 	}
-	return out, attenuation, true
+	return out, Vec3{1, 1, 1}, true
 }
