@@ -20,7 +20,7 @@ func (r Ray) Pos(t float64) Vec3 {
 // BasicColor is the color function described on page 10
 func BasicColor(r Ray, h Hitter) Vec3 {
 	// find any hits
-	if hit := h.Hit(r, 0, 10); hit.Valid {
+	if hit := h.Hit(r, 0, math.MaxFloat64); hit.Valid {
 		n := hit.Pos.Sub(Vec3{0, 0, -1}).Unit()
 		return n.ScalarAdd(1).ScalarMul(0.5)
 	}
