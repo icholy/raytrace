@@ -44,20 +44,19 @@ func BasicRay() image.Image {
 		},
 	}
 
-	bottomleft := Vec3{-2, -1, -1}
-	horizontal := Vec3{4, 0, 0}
-	vertical := Vec3{0, 2, 0}
-	origin := Vec3{0, 0, 0}
+	cam := Camera{
+		BottomLeft: Vec3{-2, -1, -1},
+		Horizontal: Vec3{4, 0, 0},
+		Vertical:   Vec3{0, 2, 0},
+		Origin:     Vec3{0, 0, 0},
+	}
 
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
 			u := float64(x) / float64(nx)
 			v := float64(ny-y) / float64(ny)
-			r := Ray{
-				Origin: origin,
-				Dir:    bottomleft.Add(horizontal.ScalarMul(u)).Add(vertical.ScalarMul(v)),
-			}
+			r := cam.Ray(u, v)
 			c := BasicColor(r, world)
 			m.Set(x, y, color.RGBA{
 				R: uint8(c.R() * 255),
@@ -136,4 +135,18 @@ func (w World) Hit(r Ray, tmin, tmax float64) Hit {
 		}
 	}
 	return closest
+}
+
+type Camera struct {
+	Origin     Vec3
+	BottomLeft Vec3
+	Horizontal Vec3
+	Vertical   Vec3
+}
+
+func (c Camera) Ray(u, v float64) Ray {
+	return Ray{
+		Origin: c.Origin,
+		Dir:    c.BottomLeft.Add(c.Horizontal.ScalarMul(u)).Add(c.Vertical.ScalarMul(v)).Sub(c.Origin),
+	}
 }
