@@ -3,6 +3,7 @@ package raytrace
 import (
 	"image"
 	"image/color"
+	"math"
 )
 
 // Ray is a ray of light
@@ -22,8 +23,9 @@ func BasicColor(r Ray) Vec3 {
 		Center: Vec3{0, 0, -1},
 		Radius: 0.5,
 	}
-	if s.Hit(r) {
-		return Vec3{1, 0, 0}
+	if t, ok := s.Hit(r); ok {
+		n := r.Pos(t).Sub(Vec3{0, 0, -1}).Unit()
+		return n.ScalarAdd(1).ScalarMul(0.5)
 	}
 	unitdir := r.Dir.Unit()
 	t := 0.5 * (unitdir.Y() + 1)
@@ -66,11 +68,14 @@ type Sphere struct {
 	Radius float64
 }
 
-func (s Sphere) Hit(r Ray) bool {
+func (s Sphere) Hit(r Ray) (float64, bool) {
 	oc := r.Origin.Sub(s.Center)
 	a := r.Dir.Dot(r.Dir)
 	b := 2 * oc.Dot(r.Dir)
 	c := oc.Dot(oc) - s.Radius*s.Radius
 	discriminant := b*b - 4*a*c
-	return discriminant > 0
+	if discriminant < 0 {
+		return 0, false
+	}
+	return (-b - math.Sqrt(discriminant)) / (2 * a), true
 }
