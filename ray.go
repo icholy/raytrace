@@ -19,16 +19,16 @@ func (r Ray) Pos(t float64) Vec3 {
 }
 
 // BasicColor is the color function described on page 10
-func BasicColor(r Ray, h Hitter) Vec3 {
+func BasicColor(r Ray, h Hitter, depth int) Vec3 {
 	// find any hits
 	if hit := h.Hit(r, 0.001, math.MaxFloat64); hit.Valid {
-		diffused := Ray{
-			Origin: hit.Pos,
-			Dir:    hit.Norm.Add(RandomInUnitSphere()),
+		if scattered, attenuation, ok := hit.Mat.Scatter(r, hit); ok && depth < 50 {
+			return attenuation.Mul(BasicColor(scattered, h, depth+1))
 		}
-		return BasicColor(diffused, h).ScalarMul(0.5)
+		// end of recursion
+		return Vec3{}
 	}
-	// show background
+	// background gradient
 	t := 0.5 * (r.Dir.Unit().Y() + 1)
 	return Vec3{1, 1, 1}.ScalarMul(1 - t).Add(Vec3{0.5, 0.7, 1}.ScalarMul(t))
 }
@@ -43,10 +43,30 @@ func BasicRay() image.Image {
 		Sphere{
 			Center: Vec3{0, 0, -1},
 			Radius: 0.5,
+			Material: Lambertian{
+				Albedo: Vec3{0.8, 0.3, 0.3},
+			},
 		},
 		Sphere{
 			Center: Vec3{0, -100.5, -1},
 			Radius: 100,
+			Material: Lambertian{
+				Albedo: Vec3{0.8, 0.8, 0},
+			},
+		},
+		Sphere{
+			Center: Vec3{1, 0, -1},
+			Radius: 0.5,
+			Material: Metal{
+				Albedo: Vec3{0.8, 0.6, 0.2},
+			},
+		},
+		Sphere{
+			Center: Vec3{-1, 0, -1},
+			Radius: 0.5,
+			Material: Metal{
+				Albedo: Vec3{0.8, 0.8, 0.8},
+			},
 		},
 	}
 
@@ -67,7 +87,7 @@ func BasicRay() image.Image {
 				u := (float64(x) + rand.Float64()) / float64(nx)
 				v := (float64(ny-y) + rand.Float64()) / float64(ny)
 				r := cam.Ray(u, v)
-				col = col.Add(BasicColor(r, world))
+				col = col.Add(BasicColor(r, world, 0))
 			}
 			col = col.ScalarDiv(float64(ns))
 			m.Set(x, y, color.RGBA{
@@ -83,8 +103,9 @@ func BasicRay() image.Image {
 
 // Sphere hitter
 type Sphere struct {
-	Center Vec3
-	Radius float64
+	Center   Vec3
+	Radius   float64
+	Material Material
 }
 
 // Hit implements Hitter
@@ -104,6 +125,7 @@ func (s Sphere) Hit(r Ray, tmin, tmax float64) Hit {
 			T:     t,
 			Pos:   pos,
 			Norm:  pos.Sub(s.Center).ScalarDiv(s.Radius),
+			Mat:   s.Material,
 		}
 	}
 	if t := (-b + math.Sqrt(b*b-a*c)) / a; tmin <= t && t <= tmax {
@@ -113,6 +135,7 @@ func (s Sphere) Hit(r Ray, tmin, tmax float64) Hit {
 			T:     t,
 			Pos:   pos,
 			Norm:  pos.Sub(s.Center).ScalarDiv(s.Radius),
+			Mat:   s.Material,
 		}
 	}
 	return Hit{}
@@ -124,6 +147,7 @@ type Hit struct {
 	T     float64
 	Pos   Vec3
 	Norm  Vec3
+	Mat   Material
 }
 
 // Hitter is an object in the scene which can be hit
