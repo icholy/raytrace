@@ -58,3 +58,6 @@ func (v Vec3) SquareLen() float64 { return v[0]*v[0] + v[1]*v[1] + v[2]*v[2] }
 
 // Unit returns the unit vector of v
 func (v Vec3) Unit() Vec3 { return v.ScalarDiv(v.Len()) }
+
+// Dot returns the dot product of v and p
+func (v Vec3) Dot(p Vec3) float64 { return v[0]*p[0] + v[1]*p[1] + v[2]*p[2] }
