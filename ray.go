@@ -77,7 +77,7 @@ type Sphere struct {
 func (s Sphere) Hit(r Ray, tmin, tmax float64) Hit {
 	oc := r.Origin.Sub(s.Center)
 	a := r.Dir.Dot(r.Dir)
-	b := 2 * oc.Dot(r.Dir)
+	b := oc.Dot(r.Dir)
 	c := oc.Dot(oc) - s.Radius*s.Radius
 	discriminant := b*b - a*c
 	if discriminant <= 0 {
