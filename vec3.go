@@ -8,9 +8,6 @@ import (
 // Vec3 is a 3 dimentional vector
 type Vec3 [3]float64
 
-// Unit returns a unit vector
-func Unit() Vec3 { return Vec3{1, 1, 1} }
-
 // String returns a string representation of v
 func (v Vec3) String() string { return fmt.Sprintf("(%f, %f, %f)", v[0], v[1], v[2]) }
 
@@ -58,3 +55,6 @@ func (v Vec3) Len() float64 { return math.Sqrt(v.SquareLen()) }
 
 // SquareLen returns the length squared
 func (v Vec3) SquareLen() float64 { return v[0]*v[0] + v[1]*v[1] + v[2]*v[2] }
+
+// Unit returns the unit vector of v
+func (v Vec3) Unit() Vec3 { return v.ScalarDiv(v.Len()) }

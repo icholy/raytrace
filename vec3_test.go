@@ -8,11 +8,6 @@ func TestVec3(t *testing.T) {
 		want, got Vec3
 	}{
 		{
-			name: "unit",
-			want: Vec3{1, 1, 1},
-			got:  Unit(),
-		},
-		{
 			name: "neg",
 			want: Vec3{-1, -2, -3},
 			got:  Vec3{1, 2, 3}.Neg(),
@@ -40,7 +35,7 @@ func TestVec3(t *testing.T) {
 		{
 			name: "scalar_mul",
 			want: Vec3{2, 2, 2},
-			got:  Unit().ScalarMul(2),
+			got:  Vec3{1, 1, 1}.ScalarMul(2),
 		},
 		{
 			name: "scalar_div",
