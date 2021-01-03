@@ -12,9 +12,7 @@ type Vec3 [3]float64
 func Unit() Vec3 { return Vec3{1, 1, 1} }
 
 // String returns a string representation of v
-func (v Vec3) String() string {
-	return fmt.Sprintf("(%f, %f, %f)", v[0], v[1], v[2])
-}
+func (v Vec3) String() string { return fmt.Sprintf("(%f, %f, %f)", v[0], v[1], v[2]) }
 
 // X returns the x component
 func (v Vec3) X() float64 { return v[0] }
