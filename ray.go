@@ -21,8 +21,12 @@ func (r Ray) Pos(t float64) Vec3 {
 // BasicColor is the color function described on page 10
 func BasicColor(r Ray, h Hitter) Vec3 {
 	// find any hits
-	if hit := h.Hit(r, 0, math.MaxFloat64); hit.Valid {
-		return hit.Norm.ScalarAdd(1).ScalarMul(0.5)
+	if hit := h.Hit(r, 0.001, math.MaxFloat64); hit.Valid {
+		diffused := Ray{
+			Origin: hit.Pos,
+			Dir:    hit.Norm.Add(RandomInUnitSphere()),
+		}
+		return BasicColor(diffused, h).ScalarMul(0.5)
 	}
 	// show background
 	t := 0.5 * (r.Dir.Unit().Y() + 1)
@@ -145,6 +149,7 @@ func (w World) Hit(r Ray, tmin, tmax float64) Hit {
 	return closest
 }
 
+// Camera is the users point of view
 type Camera struct {
 	Origin     Vec3
 	BottomLeft Vec3
@@ -152,9 +157,20 @@ type Camera struct {
 	Vertical   Vec3
 }
 
+// Ray returns a ray for the provided u/v coordinates
 func (c Camera) Ray(u, v float64) Ray {
 	return Ray{
 		Origin: c.Origin,
 		Dir:    c.BottomLeft.Add(c.Horizontal.ScalarMul(u)).Add(c.Vertical.ScalarMul(v)).Sub(c.Origin),
+	}
+}
+
+// RandomInUnitSphere doesn't look very efficient
+func RandomInUnitSphere() Vec3 {
+	for {
+		p := Vec3{rand.Float64(), rand.Float64(), rand.Float64()}.ScalarMul(2).ScalarSub(1)
+		if p.SquareLen() < 1 {
+			return p
+		}
 	}
 }
