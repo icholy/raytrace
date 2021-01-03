@@ -18,6 +18,13 @@ func (r Ray) Pos(t float64) Vec3 {
 
 // BasicColor is the color function described on page 10
 func BasicColor(r Ray) Vec3 {
+	s := Sphere{
+		Center: Vec3{0, 0, -1},
+		Radius: 0.5,
+	}
+	if s.Hit(r) {
+		return Vec3{1, 0, 0}
+	}
 	unitdir := r.Dir.Unit()
 	t := 0.5 * (unitdir.Y() + 1)
 	return Vec3{1, 1, 1}.ScalarMul(1 - t).Add(Vec3{0.5, 0.7, 1}.ScalarMul(t))
@@ -52,4 +59,18 @@ func BasicRay() image.Image {
 		}
 	}
 	return m
+}
+
+type Sphere struct {
+	Center Vec3
+	Radius float64
+}
+
+func (s Sphere) Hit(r Ray) bool {
+	oc := r.Origin.Sub(s.Center)
+	a := r.Dir.Dot(r.Dir)
+	b := 2 * oc.Dot(r.Dir)
+	c := oc.Dot(oc) - s.Radius*s.Radius
+	discriminant := b*b - 4*a*c
+	return discriminant > 0
 }
