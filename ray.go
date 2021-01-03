@@ -259,18 +259,33 @@ func (Dielectric) refract(v, n Vec3, niOverNt float64) (Vec3, bool) {
 	return Vec3{}, false
 }
 
+// polynomial approximation of glass reflection/refraction
+func (d Dielectric) schlick(cosine float64) float64 {
+	r0 := (1 - d.RefIndex) / (1 + d.RefIndex)
+	r0 = r0 * r0
+	return r0 + (1 - r0) + math.Pow(1-cosine, 5)
+}
+
+// isReflect decides if the current angle should be reflected or refracted
+func (d Dielectric) isReflect(cosine float64) bool {
+	return d.schlick(cosine) < rand.Float64()
+}
+
 // Scatter implements material
 func (d Dielectric) Scatter(in Ray, h Hit) (out Ray, attenuation Vec3, ok bool) {
 	var outwardNorm Vec3
 	var niOverNt float64
+	var cosine float64
 	if in.Dir.Dot(h.Norm) > 0 {
 		outwardNorm = h.Norm.Neg()
 		niOverNt = d.RefIndex
+		cosine = d.RefIndex * in.Dir.Dot(h.Norm) / in.Dir.Len()
 	} else {
 		outwardNorm = h.Norm
 		niOverNt = 1.0 / d.RefIndex
+		cosine = -in.Dir.Dot(h.Norm) / in.Dir.Len()
 	}
-	if refracted, ok := d.refract(in.Dir, outwardNorm, niOverNt); ok {
+	if refracted, ok := d.refract(in.Dir, outwardNorm, niOverNt); ok && !d.isReflect(cosine) {
 		out = Ray{
 			Origin: h.Pos,
 			Dir:    refracted,
