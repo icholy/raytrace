@@ -22,7 +22,7 @@ func (r Ray) Pos(t float64) Vec3 {
 func BasicColor(r Ray, h Hitter, depth int) Vec3 {
 	// find any hits
 	if hit := h.Hit(r, 0.001, math.MaxFloat64); hit.Valid {
-		if scattered, attenuation, ok := hit.Mat.Scatter(r, hit); ok && depth < 50 {
+		if scattered, attenuation, ok := hit.Mat.Scatter(r, hit); ok && depth <= 50 {
 			return attenuation.Mul(BasicColor(scattered, h, depth+1))
 		}
 		// end of recursion
@@ -44,7 +44,7 @@ func BasicRay() image.Image {
 			Center: Vec3{0, 0, -1},
 			Radius: 0.5,
 			Material: Lambertian{
-				Albedo: Vec3{0.8, 0.3, 0.3},
+				Albedo: Vec3{0.1, 0.2, 0.5},
 			},
 		},
 		Sphere{
@@ -65,9 +65,8 @@ func BasicRay() image.Image {
 		Sphere{
 			Center: Vec3{-1, 0, -1},
 			Radius: 0.5,
-			Material: Metal{
-				Fuzz:   1,
-				Albedo: Vec3{0.8, 0.8, 0.8},
+			Material: Dielectric{
+				RefIndex: 1.5,
 			},
 		},
 	}
@@ -238,4 +237,52 @@ func (m Metal) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool) 
 		Dir:    m.reflect(r.Dir.Unit(), h.Norm).Add(RandomInUnitSphere().ScalarMul(m.Fuzz)),
 	}
 	return scattered, m.Albedo, scattered.Dir.Dot(h.Norm) > 0
+}
+
+// Dielectric is a material which both reflects and refracts light
+type Dielectric struct {
+	RefIndex float64
+}
+
+// reflect the ray
+func (Dielectric) reflect(v, n Vec3) Vec3 {
+	return v.Sub(n.ScalarMul(2 * v.Dot(n)))
+}
+
+// refract the ray
+func (Dielectric) refract(v, n Vec3, niOverNt float64) (Vec3, bool) {
+	uv := v.Unit()
+	dt := uv.Dot(n)
+	discriminant := 1 - niOverNt*niOverNt*(1-dt*dt)
+	if discriminant > 0 {
+		return uv.Sub(n.ScalarMul(dt)).ScalarMul(niOverNt).Sub(n.ScalarMul(math.Sqrt(discriminant))), true
+	}
+	return Vec3{}, false
+}
+
+// Scatter implements material
+func (d Dielectric) Scatter(r Ray, h Hit) (scattered Ray, attenuation Vec3, ok bool) {
+	var outwardNorm Vec3
+	var niOverNt float64
+	attenuation = Vec3{1, 1, 0}
+	if r.Dir.Dot(h.Norm) > 0 {
+		outwardNorm = h.Norm.Neg()
+		niOverNt = d.RefIndex
+	} else {
+		outwardNorm = h.Norm
+		niOverNt = 1.0 / d.RefIndex
+	}
+	if refracted, ok := d.refract(r.Dir, outwardNorm, niOverNt); ok {
+		scattered = Ray{
+			Origin: h.Pos,
+			Dir:    refracted,
+		}
+	} else {
+		scattered = Ray{
+			Origin: h.Pos,
+			Dir:    d.reflect(r.Dir, h.Norm),
+		}
+		return scattered, attenuation, false
+	}
+	return scattered, attenuation, true
 }
