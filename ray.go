@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"math/rand"
 )
 
 // Ray is a ray of light
@@ -32,6 +33,7 @@ func BasicColor(r Ray, h Hitter) Vec3 {
 func BasicRay() image.Image {
 	nx := 200
 	ny := 100
+	ns := 100
 
 	world := World{
 		Sphere{
@@ -51,17 +53,23 @@ func BasicRay() image.Image {
 		Origin:     Vec3{0, 0, 0},
 	}
 
+	_ = rand.Float64()
+
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
-			u := float64(x) / float64(nx)
-			v := float64(ny-y) / float64(ny)
-			r := cam.Ray(u, v)
-			c := BasicColor(r, world)
+			var col Vec3
+			for i := 0; i < ns; i++ {
+				u := (float64(x) + rand.Float64()) / float64(nx)
+				v := (float64(ny-y) + rand.Float64()) / float64(ny)
+				r := cam.Ray(u, v)
+				col = col.Add(BasicColor(r, world))
+			}
+			col = col.ScalarDiv(float64(ns))
 			m.Set(x, y, color.RGBA{
-				R: uint8(c.R() * 255),
-				G: uint8(c.G() * 255),
-				B: uint8(c.B() * 255),
+				R: uint8(col.R() * 255),
+				G: uint8(col.G() * 255),
+				B: uint8(col.B() * 255),
 				A: 0xFF,
 			})
 		}
