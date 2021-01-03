@@ -50,6 +50,12 @@ func (v Vec3) ScalarMul(x float64) Vec3 { return Vec3{v[0] * x, v[1] * x, v[2] *
 // ScalarDiv returns v divided by x
 func (v Vec3) ScalarDiv(x float64) Vec3 { return Vec3{v[0] / x, v[1] / x, v[2] / x} }
 
+// ScalarAdd returns x added to v
+func (v Vec3) ScalarAdd(x float64) Vec3 { return Vec3{v[0] + x, v[1] + x, v[2] + x} }
+
+// ScalarSub returns x subtracted from v
+func (v Vec3) ScalarSub(x float64) Vec3 { return Vec3{v[0] - x, v[1] - x, v[2] - x} }
+
 // Len returns the vector length
 func (v Vec3) Len() float64 { return math.Sqrt(v.SquareLen()) }
 
