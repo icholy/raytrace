@@ -18,17 +18,14 @@ func (r Ray) Pos(t float64) Vec3 {
 }
 
 // BasicColor is the color function described on page 10
-func BasicColor(r Ray, world []Hitter) Vec3 {
+func BasicColor(r Ray, h Hitter) Vec3 {
 	// find any hits
-	for _, h := range world {
-		if hit := h.Hit(r, 0, 10); hit.Valid {
-			n := hit.Pos.Sub(Vec3{0, 0, -1}).Unit()
-			return n.ScalarAdd(1).ScalarMul(0.5)
-		}
+	if hit := h.Hit(r, 0, 10); hit.Valid {
+		n := hit.Pos.Sub(Vec3{0, 0, -1}).Unit()
+		return n.ScalarAdd(1).ScalarMul(0.5)
 	}
 	// show background
-	unitdir := r.Dir.Unit()
-	t := 0.5 * (unitdir.Y() + 1)
+	t := 0.5 * (r.Dir.Unit().Y() + 1)
 	return Vec3{1, 1, 1}.ScalarMul(1 - t).Add(Vec3{0.5, 0.7, 1}.ScalarMul(t))
 }
 
@@ -37,7 +34,7 @@ func BasicRay() image.Image {
 	nx := 200
 	ny := 100
 
-	world := []Hitter{
+	world := World{
 		Sphere{
 			Center: Vec3{0, 0, -1},
 			Radius: 0.5,
@@ -70,17 +67,19 @@ func BasicRay() image.Image {
 	return m
 }
 
+// Sphere hitter
 type Sphere struct {
 	Center Vec3
 	Radius float64
 }
 
+// Hit implements Hitter
 func (s Sphere) Hit(r Ray, tmin, tmax float64) Hit {
 	oc := r.Origin.Sub(s.Center)
 	a := r.Dir.Dot(r.Dir)
 	b := 2 * oc.Dot(r.Dir)
 	c := oc.Dot(oc) - s.Radius*s.Radius
-	discriminant := b*b - 4*a*c
+	discriminant := b*b - a*c
 	if discriminant <= 0 {
 		return Hit{}
 	}
@@ -118,4 +117,20 @@ type Hitter interface {
 
 	// Hit checks and reports whether r hit ths object
 	Hit(r Ray, tmin, tmax float64) Hit
+}
+
+// World providers a hitter implementation for multiple underlying hitters
+type World []Hitter
+
+// Hit implements Hitter
+func (w World) Hit(r Ray, tmin, tmax float64) Hit {
+	var closest Hit
+	for _, h := range w {
+		if hit := h.Hit(r, tmin, tmax); hit.Valid {
+			if !closest.Valid || hit.T < closest.T {
+				closest = hit
+			}
+		}
+	}
+	return closest
 }
