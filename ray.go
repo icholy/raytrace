@@ -37,7 +37,7 @@ func BasicRay() image.Image {
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
 			u := float64(x) / float64(nx)
-			v := float64(x) / float64(ny)
+			v := float64(y) / float64(ny)
 			r := Ray{
 				Origin: origin,
 				Dir:    bottomleft.Add(horizontal.ScalarMul(u)).Add(vertical.ScalarMul(v)),
