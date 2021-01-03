@@ -58,7 +58,6 @@ func BasicRay() image.Image {
 			Center: Vec3{1, 0, -1},
 			Radius: 0.5,
 			Material: Metal{
-				Fuzz:   0.3,
 				Albedo: Vec3{0.8, 0.6, 0.2},
 			},
 		},
