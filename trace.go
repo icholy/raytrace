@@ -10,7 +10,7 @@ func Gradient() image.Image {
 	nx := 200
 	ny := 100
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
-	for y := ny - 1; y >= 0; y-- {
+	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
 			r := float64(x) / float64(nx)
 			g := float64(y) / float64(ny)
