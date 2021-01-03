@@ -12,13 +12,15 @@ func Gradient() image.Image {
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
-			r := float64(x) / float64(nx)
-			g := float64(y) / float64(ny)
-			b := 0.2
+			v := Vec3{
+				float64(x) / float64(nx),
+				float64(y) / float64(ny),
+				0.2,
+			}
 			m.Set(x, y, color.RGBA{
-				R: uint8(r * 255),
-				G: uint8(g * 255),
-				B: uint8(b * 255),
+				R: uint8(v.R() * 255),
+				G: uint8(v.G() * 255),
+				B: uint8(v.B() * 255),
 				A: 0xFF,
 			})
 		}
