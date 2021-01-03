@@ -21,8 +21,7 @@ func (r Ray) Pos(t float64) Vec3 {
 func BasicColor(r Ray, h Hitter) Vec3 {
 	// find any hits
 	if hit := h.Hit(r, 0, math.MaxFloat64); hit.Valid {
-		n := hit.Pos.Sub(Vec3{0, 0, -1}).Unit()
-		return n.ScalarAdd(1).ScalarMul(0.5)
+		return hit.Norm.ScalarAdd(1).ScalarMul(0.5)
 	}
 	// show background
 	t := 0.5 * (r.Dir.Unit().Y() + 1)
@@ -39,6 +38,10 @@ func BasicRay() image.Image {
 			Center: Vec3{0, 0, -1},
 			Radius: 0.5,
 		},
+		Sphere{
+			Center: Vec3{0, -100.5, -1},
+			Radius: 100,
+		},
 	}
 
 	bottomleft := Vec3{-2, -1, -1}
@@ -50,7 +53,7 @@ func BasicRay() image.Image {
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
 			u := float64(x) / float64(nx)
-			v := float64(y) / float64(ny)
+			v := float64(ny-y) / float64(ny)
 			r := Ray{
 				Origin: origin,
 				Dir:    bottomleft.Add(horizontal.ScalarMul(u)).Add(vertical.ScalarMul(v)),
