@@ -182,15 +182,18 @@ type Camera struct {
 }
 
 // NewCamera constructs a camera with the provided field of view and aspect ratio
-func NewCamera(vfov, aspect float64) Camera {
+func NewCamera(from, to, vup Vec3, vfov, aspect float64) Camera {
 	theta := vfov * math.Pi / 180
 	halfheight := math.Tan(theta / 2)
 	halfwidth := aspect * halfheight
+	w := from.Sub(to).Unit()
+	u := vup.Cross(w).Unit()
+	v := w.Cross(u)
 	return Camera{
-		Origin:     Vec3{0, 0, 0},
-		BottomLeft: Vec3{-halfwidth, -halfheight, -1},
-		Horizontal: Vec3{2 * halfwidth, 0, 0},
-		Vertical:   Vec3{0, 2 * halfheight, 0},
+		Origin:     from,
+		BottomLeft: from.Sub(u.ScalarMul(halfwidth)).Sub(v.ScalarMul(halfheight)).Sub(w),
+		Horizontal: u.ScalarMul(2 * halfwidth),
+		Vertical:   v.ScalarMul(2 * halfheight),
 	}
 }
 
