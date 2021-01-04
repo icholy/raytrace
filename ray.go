@@ -39,36 +39,7 @@ func BasicRay() image.Image {
 	ny := 100
 	ns := 100
 
-	world := World{
-		Sphere{
-			Center: Vec3{0, 0, -1},
-			Radius: 0.5,
-			Material: Lambertian{
-				Albedo: Vec3{0.1, 0.2, 0.5},
-			},
-		},
-		Sphere{
-			Center: Vec3{0, -100.5, -1},
-			Radius: 100,
-			Material: Lambertian{
-				Albedo: Vec3{0.8, 0.8, 0},
-			},
-		},
-		Sphere{
-			Center: Vec3{1, 0, -1},
-			Radius: 0.5,
-			Material: Metal{
-				Albedo: Vec3{0.8, 0.6, 0.2},
-			},
-		},
-		Sphere{
-			Center: Vec3{-1, 0, -1},
-			Radius: 0.5,
-			Material: Dielectric{
-				RefIndex: 1.5,
-			},
-		},
-	}
+	world := RandomScene()
 
 	cam := NewCamera(
 		Vec3{-2, 2, 1},          // from
@@ -212,6 +183,76 @@ func RandomInUnitSphere() Vec3 {
 			return p
 		}
 	}
+}
+
+// RandomMaterial generates a random material
+func RandomMaterial() Material {
+	x := rand.Float64()
+	switch {
+	case x < 0.8: // diffuse
+		return Lambertian{
+			Albedo: Vec3{
+				rand.Float64() * rand.Float64(),
+				rand.Float64() * rand.Float64(),
+				rand.Float64() * rand.Float64()},
+		}
+	case x < 0.95: // metal
+		return Metal{
+			Albedo: Vec3{
+				0.5 * (1 + rand.Float64()),
+				0.5 * (1 + rand.Float64()),
+				0.5 * rand.Float64(),
+			},
+		}
+	default: // glass
+		return Dielectric{RefIndex: 1.5}
+	}
+}
+
+// RandomScene generates a random Hittable world
+func RandomScene() World {
+	w := World{
+		Sphere{
+			Center: Vec3{0, -1000, 0},
+			Radius: 1000,
+			Material: Lambertian{
+				Albedo: Vec3{0.5, 0.5, 0.5},
+			},
+		},
+		Sphere{
+			Center:   Vec3{0, 1, 0},
+			Radius:   1,
+			Material: Dielectric{RefIndex: 1.5},
+		},
+		Sphere{
+			Center: Vec3{-4, 1, 0},
+			Radius: 1,
+			Material: Lambertian{
+				Albedo: Vec3{0.4, 0.2, 0.1},
+			},
+		},
+		Sphere{
+			Center: Vec3{0.7, 0.6, 0.5},
+			Radius: 1,
+			Material: Metal{
+				Fuzz:   0,
+				Albedo: Vec3{0.7, 0.6, 0.5},
+			},
+		},
+	}
+	for a := -11; a < 11; a++ {
+		for b := -11; b < 11; b++ {
+			center := Vec3{float64(a) + 0.9 + rand.Float64(), 0.2, float64(b) + 0.9 + rand.Float64()}
+			if center.Sub(Vec3{4, 0.2, 0}).Len() > 0.9 {
+				w = append(w, Sphere{
+					Center:   center,
+					Radius:   0.2,
+					Material: RandomMaterial(),
+				})
+			}
+		}
+	}
+	return w
 }
 
 // Material scatters rays
