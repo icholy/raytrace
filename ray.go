@@ -70,14 +70,13 @@ func BasicRay() image.Image {
 		},
 	}
 
-	cam := Camera{
-		BottomLeft: Vec3{-2, -1, -1},
-		Horizontal: Vec3{4, 0, 0},
-		Vertical:   Vec3{0, 2, 0},
-		Origin:     Vec3{0, 0, 0},
-	}
-
-	_ = rand.Float64()
+	cam := NewCamera(
+		Vec3{-2, 2, 1},          // from
+		Vec3{0, 0, -1},          // to
+		Vec3{0, 1, 0},           // vup
+		90,                      // fov
+		float64(nx)/float64(ny), // aspec
+	)
 
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
 	for y := 0; y < ny; y++ {
