@@ -1,6 +1,7 @@
 package raytrace
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -35,8 +36,8 @@ func BasicColor(r Ray, h Hitter, depth int) Vec3 {
 
 // BasicRay outputs the image described on page 10
 func BasicRay() image.Image {
-	nx := 200
-	ny := 100
+	nx := 600
+	ny := 300
 	ns := 100
 
 	world := RandomScene()
@@ -50,6 +51,8 @@ func BasicRay() image.Image {
 	)
 
 	m := image.NewRGBA(image.Rect(0, 0, nx, ny))
+	total := nx * ny
+	count := 0
 	for y := 0; y < ny; y++ {
 		for x := 0; x < nx; x++ {
 			var col Vec3
@@ -66,6 +69,10 @@ func BasicRay() image.Image {
 				B: uint8(col.B() * 255),
 				A: 0xFF,
 			})
+			count++
+			if count%100 == 0 {
+				fmt.Printf("%d/%d: %f %%\n", count, total, (float64(count)/float64(total))*100)
+			}
 		}
 	}
 	return m
